@@ -48,8 +48,6 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -481,7 +479,8 @@ class FloatingService : Service() {
                 tgtRow.addView(chip(l.short, l.code == tgt) { prefs.target = l.code; refresh() },
                     LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(6) })
             }
-            summary.text = "${Langs.byCode(src).name}  →  ${Langs.byCode(tgt).name}"
+            val engine = if (prefs.deeplKey.isNotBlank()) "DeepL" else "Google"
+            summary.text = "${Langs.byCode(src).name}  →  ${Langs.byCode(tgt).name}   ·  $engine"
         }
 
         box.addView(label("Hangi dilden"))
@@ -674,12 +673,13 @@ class FloatingService : Service() {
                     return@launch
                 }
 
-                val translations = found.map { f ->
-                    async(Dispatchers.IO) {
-                        if (src == tgt) f.text
-                        else try { Translator.translate(f.text, src, tgt) } catch (_: Exception) { null }
-                    }
-                }.awaitAll()
+                val key = prefs.deeplKey
+                val res = withContext(Dispatchers.IO) {
+                    if (src == tgt) TranslateResult(found.map { it.text }, "-", null)
+                    else Translator.translateAll(found.map { it.text }, src, tgt, key)
+                }
+                val translations = res.texts
+                res.warning?.let { toast(it) }
 
                 if (translations.all { it == null }) {
                     toast("Çeviri yapılamadı. İnternet bağlantını kontrol et.")

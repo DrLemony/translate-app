@@ -11,8 +11,8 @@ android {
         applicationId = "com.efe.ekrancevir"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
         // Sadece ARM işlemciler (tabletler): APK çok daha küçük olur
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
@@ -20,7 +20,16 @@ android {
     }
 
     signingConfigs {
+        // Sabit anahtar: yeni sürümler eskisinin üstüne silmeden kurulur.
+        // Anahtar ve şifre repoda değil; CI'da GitHub Secrets'tan gelir (KEYSTORE_BASE64, KEYSTORE_PASSWORD).
+        // Yerelde şifre yoksa standart debug anahtarıyla imzalanır.
         getByName("debug") {
+            System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() }?.let { pw ->
+                storeFile = file("release.jks")
+                storePassword = pw
+                keyAlias = "ekran"
+                keyPassword = pw
+            }
             // Huawei/HarmonyOS kurulum aracı için eski (v1) imzayı da ekle
             enableV1Signing = true
             enableV2Signing = true
