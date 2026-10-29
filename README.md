@@ -13,7 +13,7 @@ Ekrandaki herhangi bir alanı seçip yazıları **yerinde** çeviren Android uyg
 
 ## Teknik
 - Yazı okuma: ML Kit Text Recognition (cihaz içi, Google Play Hizmetleri gerekmez)
-- Çeviri: çevrimiçi (Google Translate uç noktası, olmazsa MyMemory); internet gerekir
+- Çeviri: çevrimiçi. DeepL anahtarı girilirse DeepL, yoksa Google Translate uç noktası, o da olmazsa MyMemory; internet gerekir
 - Ekran görüntüsü: MediaProjection
 
 ## APK'yı derlemek

@@ -13,8 +13,11 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
+import android.text.InputType
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 
@@ -74,11 +77,75 @@ class MainActivity : Activity() {
             }
         }
 
+        val prefs = Prefs(this)
+        val keyLabel = TextView(this).apply {
+            text = "DeepL API anahtarı (boş bırakırsan Google kullanılır)"
+            textSize = 13f
+            setTextColor(Color.parseColor("#4A5568"))
+            setPadding(0, dp(28), 0, dp(6))
+        }
+        val keyInput = EditText(this).apply {
+            hint = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx"
+            setText(prefs.deeplKey)
+            textSize = 14f
+            isSingleLine = true
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(10).toFloat()
+                setColor(Color.WHITE)
+                setStroke(dp(1), Color.parseColor("#CBD5E0"))
+            }
+        }
+        val keyStatus = TextView(this).apply {
+            textSize = 13f
+            setPadding(0, dp(6), 0, 0)
+        }
+        fun showKeyStatus() {
+            if (prefs.deeplKey.isBlank()) {
+                keyStatus.text = "Şu an: Google Çeviri"
+                keyStatus.setTextColor(Color.parseColor("#718096"))
+            } else {
+                keyStatus.text = "Şu an: DeepL ✓"
+                keyStatus.setTextColor(Color.parseColor("#2F855A"))
+            }
+        }
+        showKeyStatus()
+        val saveKey = Button(this).apply {
+            text = "Anahtarı kaydet"
+            setOnClickListener {
+                prefs.deeplKey = keyInput.text.toString()
+                showKeyStatus()
+                Toast.makeText(this@MainActivity, "Kaydedildi", Toast.LENGTH_SHORT).show()
+            }
+        }
+        val getKey = TextView(this).apply {
+            text = "Ücretsiz anahtar al (deepl.com) →"
+            textSize = 13f
+            setTextColor(Color.parseColor("#1E5EFF"))
+            setPadding(0, dp(8), 0, 0)
+            setOnClickListener {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.deepl.com/pro-api")))
+                } catch (_: Exception) {
+                }
+            }
+        }
+
         root.addView(title)
         root.addView(info)
         root.addView(startButton, LinearLayout.LayoutParams(dp(240), dp(64)))
         root.addView(stopButton, LinearLayout.LayoutParams(dp(240), dp(52)).apply { topMargin = dp(8) })
-        setContentView(root)
+        root.addView(keyLabel, LinearLayout.LayoutParams(dp(360), -2))
+        root.addView(keyInput, LinearLayout.LayoutParams(dp(360), -2))
+        root.addView(keyStatus, LinearLayout.LayoutParams(dp(360), -2))
+        root.addView(saveKey, LinearLayout.LayoutParams(dp(360), -2).apply { topMargin = dp(6) })
+        root.addView(getKey, LinearLayout.LayoutParams(dp(360), -2))
+        setContentView(ScrollView(this).apply {
+            isFillViewport = true
+            setBackgroundColor(Color.parseColor("#F4F6FB"))
+            addView(root)
+        })
 
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
